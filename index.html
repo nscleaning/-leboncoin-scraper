@@ -2,249 +2,113 @@ cat << 'EOF' > index.html
 <!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipRadar Pro - Détecteur de Pépites</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: { 500: '#6366f1', 600: '#4f46e5' },
-                        gain: { 500: '#10b981' }
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
-    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
-    <style>
-        body { background-color: #0b0f17; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
-        .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        .glass-card { background: rgba(22, 30, 49, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .glass-card:hover { border-color: rgba(99, 102, 241, 0.4); transform: translateY(-2px); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlipRadar 59/62 — Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; }
+  </style>
 </head>
-<body class="min-h-screen pb-12">
+<body class="min-h-screen p-4 md:p-8 font-sans">
 
-    <!-- Header -->
-    <header class="sticky top-0 z-50 glass border-b border-gray-800 mb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-brand-600/20 text-brand-500 rounded-xl border border-brand-500/30">
-                    <i data-lucide="radar" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        FlipRadar <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">PRO</span>
-                    </h1>
-                    <p class="text-xs text-gray-400">Scanner Leboncoin & Analyse en Temps Réel</p>
-                </div>
+  <!-- Header -->
+  <header class="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-5">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+        ⚡ FlipRadar <span class="text-xs bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0,5 rounded-full">Secteur 59/62</span>
+      </h1>
+      <p class="text-slate-400 text-sm mt-1">Objectif : 80 € ➔ 1 000 € | Détection en temps réel</p>
+    </div>
+    <div id="stats" class="text-sm bg-slate-800/80 border border-slate-700/50 px-4 py-2 rounded-xl text-slate-300">
+      Chargement des affaires...
+    </div>
+  </header>
+
+  <!-- Grille d'annonces -->
+  <main class="max-w-6xl mx-auto">
+    <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Les cartes s'affichent ici -->
+    </div>
+    <div id="empty-state" class="hidden text-center py-20 text-slate-500">
+      Aucune pépite détectée pour le moment. Le robot cherche dans le 59 et le 62...
+    </div>
+  </main>
+
+  <script>
+    const SUPABASE_URL = "https://bxhaiycfywkjhruhzdmp.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aGFpeWNmeXdramhydWh6ZG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDM0NTQsImV4cCI6MjEwNTU3OTQ1NH0.6JeOlH5QHeLhmP_V66dARMTWaj5Xhwhurv4M_l8ogLU";
+    
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function chargerAnnonces() {
+      const { data, error } = await db
+        .from('annonces')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const grid = document.getElementById('grid');
+      const emptyState = document.getElementById('empty-state');
+      const stats = document.getElementById('stats');
+
+      if (error || !data || data.length === 0) {
+        grid.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        stats.innerText = '0 opportunité trouvée';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      
+      const totalMarge = data.reduce((acc, ad) => acc + (ad.marge_estimee || 0), 0);
+      stats.innerHTML = `<b class="text-white">${data.length}</b> pépites | Potentiel : <b class="text-emerald-400">+${totalMarge} €</b>`;
+
+      grid.innerHTML = data.map(ad => `
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-2xl overflow-hidden shadow-lg hover:border-slate-500 transition duration-200 flex flex-col">
+          
+          <!-- Image + Badge Marge -->
+          <div class="relative h-48 bg-slate-900 w-full overflow-hidden">
+            <img src="${ad.image_url || 'https://via.placeholder.com/400x300?text=Pas+d%27image'}" 
+                 alt="${ad.titre}" 
+                 class="w-full h-full object-cover">
+            <div class="absolute top-3 right-3 bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded-full text-sm shadow-md">
+              +${ad.marge_estimee} €
+            </div>
+          </div>
+
+          <!-- Contenu -->
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <h2 class="font-semibold text-lg text-white leading-snug line-clamp-2">${ad.titre}</h2>
+              <p class="text-xs text-slate-400 mt-1 line-clamp-1">${ad.analyse_ia || 'Hauts-de-France'}</p>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Bot Actif
-                </div>
-                <button onclick="chargerAnnonces()" class="p-2 rounded-lg glass text-gray-300 hover:text-white transition">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-                </button>
+            <!-- Prix -->
+            <div class="mt-4 pt-4 border-t border-slate-700/50 flex justify-between items-center text-sm">
+              <div>
+                <span class="text-slate-400 block text-xs">Achat</span>
+                <span class="font-bold text-white text-base">${ad.prix_achat} €</span>
+              </div>
+              <div class="text-right">
+                <span class="text-slate-400 block text-xs">Revente stimée</span>
+                <span class="font-semibold text-slate-300">${ad.prix_revente_estime} €</span>
+              </div>
             </div>
+
+            <!-- Bouton Leboncoin -->
+            <a href="${ad.url}" target="_blank" rel="noopener" 
+               class="mt-4 w-full text-center bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2,5 rounded-xl transition duration-150 block text-sm">
+              Voir sur Leboncoin ↗
+            </a>
+          </div>
         </div>
-    </header>
+      `).join('');
+    }
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-
-        <!-- KPIs -->
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Bénéfice Potentiel Cumulé</div>
-                <div class="text-3xl font-extrabold text-gain-500" id="kpi-total-gain">0 €</div>
-                <div class="text-xs text-gray-500 mt-2">Cumul des marges trouvées</div>
-            </div>
-
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Pépites Détectées</div>
-                <div class="text-3xl font-bold text-white" id="kpi-total-deals">0</div>
-                <div class="text-xs text-gray-500 mt-2">Affaires prêtes à l'achat</div>
-            </div>
-
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Marge Moyenne</div>
-                <div class="text-3xl font-bold text-brand-400" id="kpi-avg-margin">0 €</div>
-                <div class="text-xs text-gray-500 mt-2">Rentabilité par objet</div>
-            </div>
-
-            <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Meilleur Deal</div>
-                <div class="text-3xl font-bold text-yellow-400" id="kpi-max-margin">0 €</div>
-                <div class="text-xs text-gray-500 mt-2">Plus grosse opportunité</div>
-            </div>
-        </section>
-
-        <!-- Filtres et Recherche -->
-        <section class="glass p-4 rounded-2xl flex flex-col lg:flex-row gap-4 items-center justify-between border border-gray-800">
-            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                <button onclick="setSector('ALL')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white" data-sector="ALL">
-                    Tous
-                </button>
-                <button onclick="setSector('IPHONE')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300" data-sector="IPHONE">
-                    📱 iPhones
-                </button>
-                <button onclick="setSector('PS5')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300" data-sector="PS5">
-                    🎮 PS5
-                </button>
-            </div>
-
-            <div class="flex items-center gap-3 w-full lg:w-auto">
-                <div class="relative flex-1 lg:w-64">
-                    <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="search-input" oninput="filtrerAnnonces()" placeholder="Ville, modèle..." class="w-full bg-gray-900 text-sm text-gray-200 pl-9 pr-4 py-2 rounded-xl border border-gray-700 focus:outline-none">
-                </div>
-
-                <select id="sort-select" onchange="filtrerAnnonces()" class="bg-gray-900 text-xs text-gray-200 px-3 py-2.5 rounded-xl border border-gray-700 focus:outline-none">
-                    <option value="marge-desc">Plus grosse marge</option>
-                    <option value="prix-asc">Prix croissant</option>
-                    <option value="recent">Plus récent</option>
-                </select>
-            </div>
-        </section>
-
-        <!-- Grille des Annonces -->
-        <section id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></section>
-
-    </main>
-
-    <script>
-        const SUPABASE_URL = "[https://bxhaiycfywkjhruhzdmp.supabase.co](https://bxhaiycfywkjhruhzdmp.supabase.co)";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aGFpeWNmeXdramhydWh6ZG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDM0NTQsImV4cCI6MjEwNTU3OTQ1NH0.6JeOlH5QHeLhmP_V66dARMTWaj5Xhwhurv4M_l8ogLU";
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        let toutesLesAnnonces = [];
-        let secteurActif = 'ALL';
-
-        async function chargerAnnonces() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('annonces')
-                    .select('*')
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-
-                toutesLesAnnonces = data || [];
-                calculerKPIs(toutesLesAnnonces);
-                filtrerAnnonces();
-            } catch (err) {
-                console.error("Erreur Supabase:", err);
-            }
-        }
-
-        function calculerKPIs(data) {
-            if (!data.length) return;
-            const totalGain = data.reduce((acc, ad) => acc + (ad.marge_estimee || 0), 0);
-            const avgMarge = Math.round(totalGain / data.length);
-            const maxMarge = Math.max(...data.map(ad => ad.marge_estimee || 0));
-
-            document.getElementById('kpi-total-gain').innerText = `${totalGain.toLocaleString('fr-FR')} €`;
-            document.getElementById('kpi-total-deals').innerText = data.length;
-            document.getElementById('kpi-avg-margin').innerText = `+${avgMarge} €`;
-            document.getElementById('kpi-max-margin').innerText = `+${maxMarge} €`;
-        }
-
-        function setSector(sector) {
-            secteurActif = sector;
-            document.querySelectorAll('.sector-btn').forEach(btn => {
-                if (btn.getAttribute('data-sector') === sector) {
-                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white";
-                } else {
-                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300";
-                }
-            });
-            filtrerAnnonces();
-        }
-
-        function filtrerAnnonces() {
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
-            const sortBy = document.getElementById('sort-select').value;
-
-            let resultats = toutesLesAnnonces.filter(ad => {
-                const texte = `${ad.titre} ${ad.analyse_ia}`.toLowerCase();
-                const correspondRecherche = texte.includes(searchQuery);
-                let correspondSecteur = true;
-
-                if (secteurActif === 'IPHONE') correspondSecteur = ad.titre.toLowerCase().includes('iphone');
-                if (secteurActif === 'PS5') correspondSecteur = ad.titre.toLowerCase().includes('ps5');
-
-                return correspondRecherche && correspondSecteur;
-            });
-
-            if (sortBy === 'marge-desc') resultats.sort((a, b) => b.marge_estimee - a.marge_estimee);
-            if (sortBy === 'prix-asc') resultats.sort((a, b) => a.prix_achat - b.prix_achat);
-
-            afficherAnnonces(resultats);
-        }
-
-        function afficherAnnonces(annonces) {
-            const container = document.getElementById('deals-grid');
-            if (!annonces.length) {
-                container.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 glass rounded-2xl">Aucune annonce trouvée.</div>`;
-                return;
-            }
-
-            container.innerHTML = annonces.map(ad => `
-                <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300">
-                    <div>
-                        <div class="relative h-48 bg-gray-900 overflow-hidden">
-                            ${ad.image_url ? 
-                                `<img src="${ad.image_url}" class="w-full h-full object-cover" alt="${ad.titre}">` :
-                                `<div class="w-full h-full flex items-center justify-center text-gray-700"><i data-lucide="image" class="w-10 h-10"></i></div>`
-                            }
-                            <div class="absolute top-3 right-3 bg-gain-500/90 text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow border border-gain-400/30">
-                                +${ad.marge_estimee} € MARGE
-                            </div>
-                        </div>
-
-                        <div class="p-5 space-y-4">
-                            <h3 class="text-base font-bold text-white line-clamp-1">${ad.titre}</h3>
-
-                            <div class="grid grid-cols-2 gap-2 bg-gray-900/60 p-3 rounded-xl border border-gray-800">
-                                <div>
-                                    <span class="text-[10px] uppercase font-bold text-gray-400 block">Prix Achat</span>
-                                    <span class="text-lg font-bold text-white">${ad.prix_achat} €</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] uppercase font-bold text-gray-400 block">Revente Est.</span>
-                                    <span class="text-lg font-bold text-gain-400">${ad.prix_revente_estime} €</span>
-                                </div>
-                            </div>
-
-                            <div class="text-xs text-gray-300 bg-gray-900/40 p-3 rounded-xl border border-gray-800 flex items-start gap-2">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-brand-400 shrink-0 mt-0.5"></i>
-                                <span>${ad.analyse_ia || 'Annonce vérifiée'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-5 pt-0">
-                        <a href="${ad.url}" target="_blank" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
-                            Ouvrir sur Leboncoin
-                            <i data-lucide="external-link" class="w-4 h-4"></i>
-                        </a>
-                    </div>
-                </div>
-            `).join('');
-
-            lucide.createIcons();
-        }
-
-        chargerAnnonces();
-        setInterval(chargerAnnonces, 15000);
-    </script>
+    chargerAnnonces();
+    setInterval(chargerAnnonces, 30000); // Rafraîchissement automatique toutes les 30s
+  </script>
 </body>
 </html>
 EOF
