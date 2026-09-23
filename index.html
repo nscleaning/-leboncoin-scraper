@@ -4,25 +4,23 @@ cat << 'EOF' > index.html
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipRadar Pro - Détecteur de Pépites Leboncoin</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>FlipRadar Pro - Détecteur de Pépites</title>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        brand: { 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' },
-                        gain: { 500: '#10b981', 600: '#059669' }
+                        brand: { 500: '#6366f1', 600: '#4f46e5' },
+                        gain: { 500: '#10b981' }
                     }
                 }
             }
         }
     </script>
-    <!-- Lucide Icons & Supabase JS -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="[https://unpkg.com/lucide@latest](https://unpkg.com/lucide@latest)"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
     <style>
         body { background-color: #0b0f17; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
         .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
@@ -32,28 +30,27 @@ cat << 'EOF' > index.html
 </head>
 <body class="min-h-screen pb-12">
 
-    <!-- Navbar -->
-    <header class="sticky top-0 z-50 glass border-b border-gray-800/60 mb-8">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass border-b border-gray-800 mb-8">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <div class="p-2.5 bg-brand-600/20 text-brand-500 rounded-xl border border-brand-500/30">
-                    <i data-lucide="zap" class="w-6 h-6"></i>
+                    <i data-lucide="radar" class="w-6 h-6"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                         FlipRadar <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">PRO</span>
                     </h1>
-                    <p class="text-xs text-gray-400">Scanner Leboncoin Temps Réel</p>
+                    <p class="text-xs text-gray-400">Scanner Leboncoin & Analyse en Temps Réel</p>
                 </div>
             </div>
 
-            <!-- Status Indicator -->
             <div class="flex items-center gap-4">
                 <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
                     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Bot Actif & Synchro Supabase
+                    Bot Actif
                 </div>
-                <button onclick="chargerAnnonces()" class="p-2 rounded-lg glass text-gray-300 hover:text-white hover:bg-gray-800 transition">
+                <button onclick="chargerAnnonces()" class="p-2 rounded-lg glass text-gray-300 hover:text-white transition">
                     <i data-lucide="refresh-cw" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -62,66 +59,54 @@ cat << 'EOF' > index.html
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
-        <!-- KPI Metrics Grid -->
+        <!-- KPIs -->
         <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Total Bénéfice -->
-            <div class="glass-card p-6 rounded-2xl relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 opacity-10 text-gain-500">
-                    <i data-lucide="wallet" class="w-32 h-32"></i>
-                </div>
-                <div class="text-gray-400 text-sm font-medium mb-1">Bénéfice Potentiel Total</div>
-                <div class="text-3xl font-extrabold text-gain-500 flex items-baseline gap-1" id="kpi-total-gain">
-                    0 €
-                </div>
-                <div class="text-xs text-gray-500 mt-2">Cumul de toutes les pépites détectées</div>
+            <div class="glass-card p-6 rounded-2xl">
+                <div class="text-gray-400 text-sm font-medium mb-1">Bénéfice Potentiel Cumulé</div>
+                <div class="text-3xl font-extrabold text-gain-500" id="kpi-total-gain">0 €</div>
+                <div class="text-xs text-gray-500 mt-2">Cumul des marges trouvées</div>
             </div>
 
-            <!-- Total Pépites -->
             <div class="glass-card p-6 rounded-2xl">
                 <div class="text-gray-400 text-sm font-medium mb-1">Pépites Détectées</div>
                 <div class="text-3xl font-bold text-white" id="kpi-total-deals">0</div>
-                <div class="text-xs text-gray-500 mt-2">Affaires prêtes à acheter</div>
+                <div class="text-xs text-gray-500 mt-2">Affaires prêtes à l'achat</div>
             </div>
 
-            <!-- Marge Moyenne -->
             <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Marge Moyenne / Deal</div>
+                <div class="text-gray-400 text-sm font-medium mb-1">Marge Moyenne</div>
                 <div class="text-3xl font-bold text-brand-400" id="kpi-avg-margin">0 €</div>
-                <div class="text-xs text-gray-500 mt-2">Rentabilité estimée par achat</div>
+                <div class="text-xs text-gray-500 mt-2">Rentabilité par objet</div>
             </div>
 
-            <!-- Marge Max -->
             <div class="glass-card p-6 rounded-2xl">
-                <div class="text-gray-400 text-sm font-medium mb-1">Plus Grosse Marge</div>
+                <div class="text-gray-400 text-sm font-medium mb-1">Meilleur Deal</div>
                 <div class="text-3xl font-bold text-yellow-400" id="kpi-max-margin">0 €</div>
-                <div class="text-xs text-gray-500 mt-2">Meilleure opportunité actuelle</div>
+                <div class="text-xs text-gray-500 mt-2">Plus grosse opportunité</div>
             </div>
         </section>
 
-        <!-- Filters & Search Toolbar -->
+        <!-- Filtres et Recherche -->
         <section class="glass p-4 rounded-2xl flex flex-col lg:flex-row gap-4 items-center justify-between border border-gray-800">
-            
-            <!-- Category Pills -->
-            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto" id="sector-filters">
-                <button onclick="setSector('ALL')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-lg shadow-brand-500/20" data-sector="ALL">
-                    Tous les secteurs
+            <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                <button onclick="setSector('ALL')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white" data-sector="ALL">
+                    Tous
                 </button>
-                <button onclick="setSector('IPHONE')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800/80 text-gray-300 hover:bg-gray-700" data-sector="IPHONE">
+                <button onclick="setSector('IPHONE')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300" data-sector="IPHONE">
                     📱 iPhones
                 </button>
-                <button onclick="setSector('PS5')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800/80 text-gray-300 hover:bg-gray-700" data-sector="PS5">
-                    🎮 PS5 & Consoles
+                <button onclick="setSector('PS5')" class="sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300" data-sector="PS5">
+                    🎮 PS5
                 </button>
             </div>
 
-            <!-- Search & Sort Controls -->
             <div class="flex items-center gap-3 w-full lg:w-auto">
                 <div class="relative flex-1 lg:w-64">
                     <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" id="search-input" oninput="filtrerAnnonces()" placeholder="Rechercher un modèle..." class="w-full bg-gray-900/80 text-sm text-gray-200 pl-9 pr-4 py-2 rounded-xl border border-gray-700 focus:outline-none focus:border-brand-500">
+                    <input type="text" id="search-input" oninput="filtrerAnnonces()" placeholder="Ville, modèle..." class="w-full bg-gray-900 text-sm text-gray-200 pl-9 pr-4 py-2 rounded-xl border border-gray-700 focus:outline-none">
                 </div>
 
-                <select id="sort-select" onchange="filtrerAnnonces()" class="bg-gray-900/80 text-xs text-gray-200 px-3 py-2.5 rounded-xl border border-gray-700 focus:outline-none focus:border-brand-500">
+                <select id="sort-select" onchange="filtrerAnnonces()" class="bg-gray-900 text-xs text-gray-200 px-3 py-2.5 rounded-xl border border-gray-700 focus:outline-none">
                     <option value="marge-desc">Plus grosse marge</option>
                     <option value="prix-asc">Prix croissant</option>
                     <option value="recent">Plus récent</option>
@@ -129,16 +114,13 @@ cat << 'EOF' > index.html
             </div>
         </section>
 
-        <!-- Deals Grid -->
-        <section id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Dynamic Content loaded via JS -->
-        </section>
+        <!-- Grille des Annonces -->
+        <section id="deals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></section>
 
     </main>
 
     <script>
-        // --- Supabase Config ---
-        const SUPABASE_URL = "https://bxhaiycfywkjhruhzdmp.supabase.co";
+        const SUPABASE_URL = "[https://bxhaiycfywkjhruhzdmp.supabase.co](https://bxhaiycfywkjhruhzdmp.supabase.co)";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aGFpeWNmeXdramhydWh6ZG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDM0NTQsImV4cCI6MjEwNTU3OTQ1NH0.6JeOlH5QHeLhmP_V66dARMTWaj5Xhwhurv4M_l8ogLU";
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -158,13 +140,12 @@ cat << 'EOF' > index.html
                 calculerKPIs(toutesLesAnnonces);
                 filtrerAnnonces();
             } catch (err) {
-                console.error("Erreur de chargement Supabase:", err);
+                console.error("Erreur Supabase:", err);
             }
         }
 
         function calculerKPIs(data) {
             if (!data.length) return;
-            
             const totalGain = data.reduce((acc, ad) => acc + (ad.marge_estimee || 0), 0);
             const avgMarge = Math.round(totalGain / data.length);
             const maxMarge = Math.max(...data.map(ad => ad.marge_estimee || 0));
@@ -179,9 +160,9 @@ cat << 'EOF' > index.html
             secteurActif = sector;
             document.querySelectorAll('.sector-btn').forEach(btn => {
                 if (btn.getAttribute('data-sector') === sector) {
-                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white shadow-lg shadow-brand-500/20";
+                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white";
                 } else {
-                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800/80 text-gray-300 hover:bg-gray-700";
+                    btn.className = "sector-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gray-800 text-gray-300";
                 }
             });
             filtrerAnnonces();
@@ -192,16 +173,16 @@ cat << 'EOF' > index.html
             const sortBy = document.getElementById('sort-select').value;
 
             let resultats = toutesLesAnnonces.filter(ad => {
-                const correspondNom = ad.titre.toLowerCase().includes(searchQuery);
+                const texte = `${ad.titre} ${ad.analyse_ia}`.toLowerCase();
+                const correspondRecherche = texte.includes(searchQuery);
                 let correspondSecteur = true;
 
                 if (secteurActif === 'IPHONE') correspondSecteur = ad.titre.toLowerCase().includes('iphone');
-                if (secteurActif === 'PS5') correspondSecteur = ad.titre.toLowerCase().includes('ps5') || ad.titre.toLowerCase().includes('playstation');
+                if (secteurActif === 'PS5') correspondSecteur = ad.titre.toLowerCase().includes('ps5');
 
-                return correspondNom && correspondSecteur;
+                return correspondRecherche && correspondSecteur;
             });
 
-            // Tri
             if (sortBy === 'marge-desc') resultats.sort((a, b) => b.marge_estimee - a.marge_estimee);
             if (sortBy === 'prix-asc') resultats.sort((a, b) => a.prix_achat - b.prix_achat);
 
@@ -211,57 +192,47 @@ cat << 'EOF' > index.html
         function afficherAnnonces(annonces) {
             const container = document.getElementById('deals-grid');
             if (!annonces.length) {
-                container.innerHTML = `
-                    <div class="col-span-full py-16 text-center text-gray-500 glass rounded-2xl">
-                        <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 opacity-40"></i>
-                        <p class="text-base font-medium">Aucune pépite ne correspond à vos filtres.</p>
-                    </div>`;
-                lucide.createIcons();
+                container.innerHTML = `<div class="col-span-full py-12 text-center text-gray-500 glass rounded-2xl">Aucune annonce trouvée.</div>`;
                 return;
             }
 
             container.innerHTML = annonces.map(ad => `
                 <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between transition-all duration-300">
                     <div>
-                        <!-- Header Card Image & Badge -->
-                        <div class="relative h-48 bg-gray-900/90 overflow-hidden flex items-center justify-center">
+                        <div class="relative h-48 bg-gray-900 overflow-hidden">
                             ${ad.image_url ? 
-                                `<img src="${ad.image_url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="${ad.titre}">` :
-                                `<i data-lucide="image" class="w-10 h-10 text-gray-700"></i>`
+                                `<img src="${ad.image_url}" class="w-full h-full object-cover" alt="${ad.titre}">` :
+                                `<div class="w-full h-full flex items-center justify-center text-gray-700"><i data-lucide="image" class="w-10 h-10"></i></div>`
                             }
-                            <div class="absolute top-3 right-3 bg-gain-500/90 backdrop-blur-md text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow-lg border border-gain-400/30">
+                            <div class="absolute top-3 right-3 bg-gain-500/90 text-white font-extrabold text-xs px-3 py-1.5 rounded-xl shadow border border-gain-400/30">
                                 +${ad.marge_estimee} € MARGE
                             </div>
                         </div>
 
-                        <!-- Card Body -->
                         <div class="p-5 space-y-4">
                             <h3 class="text-base font-bold text-white line-clamp-1">${ad.titre}</h3>
 
-                            <!-- Price Breakdown Grid -->
                             <div class="grid grid-cols-2 gap-2 bg-gray-900/60 p-3 rounded-xl border border-gray-800">
                                 <div>
                                     <span class="text-[10px] uppercase font-bold text-gray-400 block">Prix Achat</span>
                                     <span class="text-lg font-bold text-white">${ad.prix_achat} €</span>
                                 </div>
                                 <div>
-                                    <span class="text-[10px] uppercase font-bold text-gray-400 block">Revente Estimée</span>
+                                    <span class="text-[10px] uppercase font-bold text-gray-400 block">Revente Est.</span>
                                     <span class="text-lg font-bold text-gain-400">${ad.prix_revente_estime} €</span>
                                 </div>
                             </div>
 
-                            <!-- IA Note -->
-                            <div class="text-xs text-gray-400 flex items-start gap-2 bg-brand-500/5 p-3 rounded-xl border border-brand-500/10">
-                                <i data-lucide="bot" class="w-4 h-4 text-brand-400 shrink-0 mt-0.5"></i>
-                                <span>${ad.analyse_ia || 'Calculé sur la moyenne du marché LBC'}</span>
+                            <div class="text-xs text-gray-300 bg-gray-900/40 p-3 rounded-xl border border-gray-800 flex items-start gap-2">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-brand-400 shrink-0 mt-0.5"></i>
+                                <span>${ad.analyse_ia || 'Annonce vérifiée'}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Footer Action -->
                     <div class="p-5 pt-0">
-                        <a href="${ad.url}" target="_blank" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition shadow-lg shadow-brand-600/20">
-                            Voir sur Leboncoin
+                        <a href="${ad.url}" target="_blank" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition">
+                            Ouvrir sur Leboncoin
                             <i data-lucide="external-link" class="w-4 h-4"></i>
                         </a>
                     </div>
@@ -271,7 +242,6 @@ cat << 'EOF' > index.html
             lucide.createIcons();
         }
 
-        // Auto Refresh
         chargerAnnonces();
         setInterval(chargerAnnonces, 15000);
     </script>
