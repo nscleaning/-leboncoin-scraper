@@ -1,1 +1,31 @@
 
+name: Scraper Leboncoin
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # toutes les heures, pile a l'heure (ajustable)
+  workflow_dispatch: {}    # permet aussi de le lancer manuellement depuis GitHub
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dependances
+        run: pip install -r requirements.txt
+
+      - name: Lancer le scraper
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          SCRAPFLY_API_KEY: ${{ secrets.SCRAPFLY_API_KEY }}
+        run: python scraper_leboncoin.py
