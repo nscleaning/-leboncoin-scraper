@@ -1,4 +1,4 @@
-
-scrapfly-sdk
-supabase
+curl_cffi
+beautifulsoup4
 google-genai
+supabase
