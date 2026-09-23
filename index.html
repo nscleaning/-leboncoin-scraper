@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr" class="bg-gray-900 text-gray-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto-Flip Tech | La Bassée (+25km)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="min-h-screen pb-12">
+
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🚀</span>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                        Auto-Flip Tech
+                    </h1>
+                    <p class="text-xs text-gray-400">iPhones & PS5 • La Bassée + 25km</p>
+                </div>
+            </div>
+            <button onclick="chargerAnnonces()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition flex items-center gap-2">
+                <span>🔄</span> Rafraîchir
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 mt-8">
+        <!-- Stats Bar -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-gray-800 border border-gray-700 p-4 rounded-xl">
+                <p class="text-xs text-gray-400 font-medium uppercase">Affaires détectées</p>
+                <p id="total-count" class="text-2xl font-bold text-white mt-1">0</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 p-4 rounded-xl">
+                <p class="text-xs text-gray-400 font-medium uppercase">Marge moyenne</p>
+                <p id="avg-margin" class="text-2xl font-bold text-emerald-400 mt-1">0 €</p>
+            </div>
+            <div class="bg-gray-800 border border-gray-700 p-4 rounded-xl">
+                <p class="text-xs text-gray-400 font-medium uppercase">Dernier scan</p>
+                <p id="last-scan" class="text-2xl font-bold text-gray-300 mt-1">En attente...</p>
+            </div>
+        </div>
+
+        <!-- Grid d'annonces -->
+        <div id="annonces-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Chargement... -->
+            <div class="col-span-full text-center py-12 text-gray-500">
+                Chargement des opportunités depuis Supabase...
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Configuration Supabase ---
+        const SUPABASE_URL = "https://bxhaiycfywkjruhzdmp.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4aGFpeWNmeXdramhydWh6ZG1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAwMDM0NTQsImV4cCI6MjEwNTU3OTQ1NH0.6JeOlH5QHeLhmP_V66dARMTWaj5Xhwhurv4M_l8ogLU";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function chargerAnnonces() {
+            const grid = document.getElementById('annonces-grid');
+            grid.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Recherche des affaires...</div>';
+
+            try {
+                const { data: annonces, error } = await _supabase
+                    .from('annonces')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!annonces || annonces.length === 0) {
+                    grid.innerHTML = `
+                        <div class="col-span-full text-center py-12 bg-gray-800 rounded-xl border border-gray-700">
+                            <p class="text-lg text-gray-300">Aucune annonce trouvée pour le moment.</p>
+                            <p class="text-sm text-gray-500 mt-1">Le robot analyse le secteur toutes les 2 heures.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Statistiques
+                document.getElementById('total-count').innerText = annonces.length;
+                const totalMarge = annonces.reduce((sum, a) => sum + Number(a.marge_estimee || 0), 0);
+                document.getElementById('avg-margin').innerText = `+${Math.round(totalMarge / annonces.length)} €`;
+                
+                const recentDate = new Date(annonces[0].created_at);
+                document.getElementById('last-scan').innerText = recentDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                // Affichage des cartes
+                grid.innerHTML = annonces.map(ad => `
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden hover:border-emerald-500/50 transition flex flex-col">
+                        <div class="relative h-48 bg-gray-900">
+                            <img src="${ad.image_url || 'https://via.placeholder.com/400x200?text=Pas+d%27image'}" 
+                                 alt="${ad.titre}" 
+                                 class="w-full h-full object-cover">
+                            <span class="absolute top-3 right-3 bg-emerald-500 text-gray-950 font-extrabold text-sm px-3 py-1 rounded-full shadow-lg">
+                                +${ad.marge_estimee} €
+                            </span>
+                        </div>
+                        <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-lg text-white line-clamp-1">${ad.titre}</h3>
+                                <p class="text-xs text-gray-400 mt-1">${new Date(ad.created_at).toLocaleString()}</p>
+                                
+                                <div class="flex items-center gap-4 mt-4 py-2 px-3 bg-gray-900/60 rounded-lg">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 uppercase">Achat</p>
+                                        <p class="font-semibold text-white">${ad.prix_achat} €</p>
+                                    </div>
+                                    <div class="text-gray-600">➔</div>
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 uppercase">Revente estimée</p>
+                                        <p class="font-semibold text-emerald-400">${ad.prix_revente_estime} €</p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 text-xs text-gray-300 bg-gray-900/40 p-3 rounded-lg border border-gray-700/50">
+                                    <span class="font-semibold text-emerald-400">Analyse IA :</span> ${ad.analyse_ia || 'Aucune remarque spécifiée.'}
+                                </div>
+                            </div>
+
+                            <a href="${ad.url}" target="_blank" rel="noopener noreferrer" 
+                               class="mt-5 w-full block text-center bg-gray-700 hover:bg-emerald-600 text-white font-medium py-2 rounded-lg transition text-sm">
+                                Voir l'annonce sur Leboncoin ↗
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error(err);
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-red-400">Erreur lors de la récupération des annonces : ${err.message}</div>`;
+            }
+        }
+
+        // Chargement initial
+        chargerAnnonces();
+    </script>
+</body>
+</html>
